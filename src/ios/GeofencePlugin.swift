@@ -25,7 +25,7 @@ func log(_ messages: [String]) {
 }
 
 @available(iOS 8.0, *)
-(HWPGeofencePlugin) class GeofencePlugin : CDVPlugin {
+@objc (HWPGeofencePlugin) class GeofencePlugin : CDVPlugin {
     lazy var geoNotificationManager = GeoNotificationManager()
     let priority = DispatchQueue.GlobalQueuePriority.default
     
@@ -484,7 +484,7 @@ class GeoNotificationStore {
             return nil
         } else {
             if (resultSet.count > 0) {
-                let jsonString = resultSet[0]["Data"]!.as String()!
+                let jsonString = resultSet[0]["Data"]! as String!
                 return JSON(data: jsonString.data(using: String.Encoding.utf8)!)
             }
             else {
