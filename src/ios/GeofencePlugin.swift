@@ -336,7 +336,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         let region = getMonitoredRegion(id)
         if (region != nil) {
             log("Stoping monitoring region \(id)")
-            locationManager.stopMonitoring(for: region as CLRegion)
+            locationManager.stopMonitoring(for: region)
         }
     }
     
@@ -345,7 +345,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         for object in locationManager.monitoredRegions {
             let region = object
             log("Stoping monitoring region \(region.identifier)")
-            locationManager.stopMonitoring(for: region as CLRegion)
+            locationManager.stopMonitoring(for: region)
         }
     }
     
@@ -387,7 +387,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
-        log("Monitoring region " + region!.identifier + " failed " + error)
+        log("Monitoring region " + region!.identifier + " failed " + "\(error)")
     }
     
     func handleTransition(_ region: CLRegion!, transitionType: Int) {
@@ -398,7 +398,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
                 notifyAbout(geoNotification)
             }
             
-            NotificationCenter.default.postNotificationName(NSNotification.Name(rawValue: "handleTransition"), object: geoNotification.rawString(String.Encoding.utf8, options: []))
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "handleTransition"), object: geoNotification.rawString(String.Encoding.utf8, options: []))
         }
     }
     
@@ -485,7 +485,7 @@ class GeoNotificationStore {
             return nil
         } else {
             if (resultSet.count > 0) {
-                let jsonString = resultSet[0]["Data"].asString();
+                let jsonString = resultSet[0]["Data"]!.asString();
                 return JSON(data: jsonString.data(using: String.Encoding.utf8)!)
             }
             else {
