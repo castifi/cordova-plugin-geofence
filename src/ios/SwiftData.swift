@@ -377,7 +377,7 @@ public struct SwiftData {
      :returns:     The error message relating to the provided error code
      */
     public static func errorMessageForCode(code: Int) -> String {
-        return SwiftData.SDError.errorMessageFromCode(code)
+        return SwiftData.SDError.errorMessageFromCode(errorCode: code)
     }
     
     /**
@@ -735,10 +735,10 @@ public struct SwiftData {
             if sqliteDB != nil || isConnected {
                 return nil
             }
-            let status = sqlite3_open(dbPath.cStringUsingEncoding(NSUTF8StringEncoding)!, &sqliteDB)
+            let status = sqlite3_open(dbPath.cString(usingEncoding: String.Encoding.utf8)!, &sqliteDB)
             if status != SQLITE_OK {
                 print("SwiftData Error -> During: Opening Database")
-                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(Int(status)))
+                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(errorCode: Int(status)))
                 if let errMsg = String(cString: sqlite3_errmsg(SQLiteDB.sharedInstance.sqliteDB)) {
                     print("                -> Details: \(errMsg)")
                 }
@@ -772,10 +772,10 @@ public struct SwiftData {
                 print("                -> Code: 301 - A custom connection is already open")
                 return 301
             }
-            let status = sqlite3_open_v2(dbPath.cStringUsingEncoding(NSUTF8StringEncoding)!, &sqliteDB, flags, nil)
+            let status = sqlite3_open_v2(dbPath.cString(usingEncoding: String.Encoding.utf8)!, &sqliteDB, flags, nil)
             if status != SQLITE_OK {
                 print("SwiftData Error -> During: Opening Database with Flags")
-                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(Int(status)))
+                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(errorCode: Int(status)))
                 if let errMsg = String(cString: sqlite3_errmsg(SQLiteDB.sharedInstance.sqliteDB)) {
                     print("                -> Details: \(errMsg)")
                 }
@@ -799,7 +799,7 @@ public struct SwiftData {
             let status = sqlite3_close(sqliteDB)
             if status != SQLITE_OK {
                 print("SwiftData Error -> During: Closing Database")
-                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(Int(status)))
+                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(errorCode: Int(status)))
                 if let errMsg = String(cString: sqlite3_errmsg(SQLiteDB.sharedInstance.sqliteDB)) {
                     print("                -> Details: \(errMsg)")
                 }
@@ -833,7 +833,7 @@ public struct SwiftData {
             openWithFlags = false
             if status != SQLITE_OK {
                 print("SwiftData Error -> During: Closing Database with Flags")
-                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(Int(status)))
+                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(errorCode: Int(status)))
                 if let errMsg = String(cString: sqlite3_errmsg(SQLiteDB.sharedInstance.sqliteDB)) {
                     print("                -> Details: \(errMsg)")
                 }
@@ -929,7 +929,7 @@ public struct SwiftData {
         
         //number of rows changed by last update
         func numberOfRowsModified() -> Int {
-            return Int(sqlite3_changes(sqliteDB))
+            return Int(sqlite3_changes(sqliteDB)) as AnyObject?
         }
         
         //return value of column
@@ -943,7 +943,7 @@ public struct SwiftData {
                 return Int(sqlite3_column_int(statement, index))
             case "CHARACTER(20)", "VARCHAR(255)", "VARYING CHARACTER(255)", "NCHAR(55)", "NATIVE CHARACTER", "NVARCHAR(100)", "TEXT", "CLOB":
                 let text = UnsafePointer<Int8>(sqlite3_column_text(statement, index))
-                return String(cString: text!)
+                return String(cString: text!) as AnyObject?
             case "BLOB", "NONE":
                 let blob = sqlite3_column_blob(statement, index)
                 if blob != nil {
@@ -955,7 +955,7 @@ public struct SwiftData {
                 if sqlite3_column_type(statement, index) == SQLITE_NULL {
                     return nil
                 }
-                return Double(sqlite3_column_double(statement, index))
+                return Double(sqlite3_column_double(statement, index)) as AnyObject?
             case "BOOLEAN":
                 if sqlite3_column_type(statement, index) == SQLITE_NULL {
                     return nil
@@ -996,7 +996,7 @@ public struct SwiftData {
             var status = sqlite3_prepare_v2(SQLiteDB.sharedInstance.sqliteDB, sql, -1, &pStmt, nil)
             if status != SQLITE_OK {
                 print("SwiftData Error -> During: SQL Prepare")
-                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(Int(status)))
+                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(errorCode: Int(status)))
                 if let errMsg = String(cString: sqlite3_errmsg(SQLiteDB.sharedInstance.sqliteDB)) {
                     print("                -> Details: \(errMsg)")
                 }
@@ -1006,7 +1006,7 @@ public struct SwiftData {
             status = sqlite3_step(pStmt)
             if status != SQLITE_DONE && status != SQLITE_OK {
                 print("SwiftData Error -> During: SQL Step")
-                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(Int(status)))
+                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(errorCode: Int(status)))
                 if let errMsg = String(cString: sqlite3_errmsg(SQLiteDB.sharedInstance.sqliteDB)) {
                     print("                -> Details: \(errMsg)")
                 }
@@ -1035,7 +1035,7 @@ public struct SwiftData {
             var status = sqlite3_prepare_v2(SQLiteDB.sharedInstance.sqliteDB, sql, -1, &pStmt, nil)
             if status != SQLITE_OK {
                 print("SwiftData Error -> During: SQL Prepare")
-                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(Int(status)))
+                print("                -> Code: \(status) - " + SDError.errorMessageFromCode(errorCode: Int(status)))
                 if let errMsg = String(cString: sqlite3_errmsg(SQLiteDB.sharedInstance.sqliteDB)) {
                     print("                -> Details: \(errMsg)")
                 }
@@ -1083,7 +1083,7 @@ public struct SwiftData {
                     next = false
                 } else {
                     print("SwiftData Error -> During: SQL Step")
-                    print("                -> Code: \(status) - " + SDError.errorMessageFromCode(Int(status)))
+                    print("                -> Code: \(status) - " + SDError.errorMessageFromCode(errorCode: Int(status)))
                     if let errMsg = String(cString: sqlite3_errmsg(SQLiteDB.sharedInstance.sqliteDB)) {
                         print("                -> Details: \(errMsg)")
                     }
@@ -1296,13 +1296,13 @@ extension SwiftData.SQLiteDB {
         
         if let obj: AnyObject = obj {
             if obj is String {
-                return "'\(escapeStringValue(obj as String))'"
+                return "'\(escapeStringValue(str: obj as String))'"
             }
             if obj is Double || obj is Int {
                 return "\(obj: obj)"
             }
             if obj is Bool {
-                if obj as Bool {
+                if obj as! Bool {
                     return "1"
                 } else {
                     return "0"
@@ -1321,10 +1321,10 @@ extension SwiftData.SQLiteDB {
             if obj is NSDate {
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-                return "\(escapeValue(dateFormatter.stringFromDate(obj as NSDate)))"
+                return "\(escapeValue(obj: dateFormatter.stringFromDate(obj as NSDate)))"
             }
             if obj is UIImage {
-                if let imageID = SD.saveUIImage(obj as UIImage) {
+                if let imageID = SD.saveUIImage(image: obj as UIImage) {
                     return "'\(escapeStringValue(imageID))'"
                 }
                 print("SwiftData Warning -> Cannot save image, NULL will be inserted into the database")
@@ -1340,7 +1340,7 @@ extension SwiftData.SQLiteDB {
     
     //return escaped String identifier
     func escapeIdentifier(obj: String) -> String {
-        return "\"\(escapeStringIdentifier(obj: obj))\""
+        return "\"\(escapeStringIdentifier(str: obj))\""
     }
     
     

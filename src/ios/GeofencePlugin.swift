@@ -337,7 +337,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         let region = getMonitoredRegion(id)
         if (region != nil) {
             log("Stoping monitoring region \(id)")
-            locationManager.stopMonitoring(for: region as CLRegion)
+            locationManager.stopMonitoring(for: region! as CLRegion)
         }
     }
     
@@ -346,8 +346,8 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         for object in locationManager.monitoredRegions {
             let region = object
             if (region != nil) {
-                log("Stoping monitoring region \(region.identifier)")
-                locationManager.stopMonitoring(for: region!)
+                log("Stoping monitoring region \(id)")
+                locationManager.stopMonitoring(for: region! as CLRegion)
             }
         }
     }
