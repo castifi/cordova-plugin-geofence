@@ -236,7 +236,7 @@ public struct SwiftData {
         
         var error: Int? = nil
         let task: ()->Void = {
-            if let err = SQLiteDB.sharedInstance.openWithFlags(flags.toSQL()) {
+            if let err = SQLiteDB.sharedInstance.openWithFlags(flags: flags.toSQL()) {
                 error = err
                 return
             }
@@ -669,7 +669,7 @@ public struct SwiftData {
      */
     public static func saveUIImage(image: UIImage) -> String? {
         
-        let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.DocumentDirectory, FileManager.SearchPathDomainMask.UserDomainMask, true)[0] as String
+        let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0] as String
         let imageDirPath = docsPath.stringByAppendingPathComponent("SwiftDataImages")
         if FileManager.defaultManager().fileExistsAtPath(imageDirPath) {
             if FileManager.defaultManager().createDirectoryAtPath(imageDirPath, withIntermediateDirectories: false, attributes: nil, error: nil) {
@@ -697,7 +697,7 @@ public struct SwiftData {
      */
     public static func deleteUIImageWithID(id: String) -> Bool {
         
-        let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.DocumentDirectory, FileManager.SearchPathDomainMask.UserDomainMask, true)[0] as String
+        let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0] as String
         let imageDirPath = docsPath.stringByAppendingPathComponent("SwiftDataImages")
         let fullPath = imageDirPath.stringByAppendingPathComponent(id)
         returnFileManager.defaultManager().removeItemAtPath(fullPath, error: nil)
@@ -846,7 +846,7 @@ public struct SwiftData {
         //create the database path
         class func createPath() -> String {
             
-            let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.DocumentDirectory, FileManager.SearchPathDomainMask.UserDomainMask, true)[0] as String
+            let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0] as String
             let databaseStr = "SwiftData.sqlite"
             let dbPath = docsPath.stringByAppendingPathComponent(databaseStr)
             return dbPath
@@ -1198,7 +1198,7 @@ public struct SwiftData {
         public func asUIImage() -> UIImage? {
             
             if let path = value as? String{
-                let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.DocumentDirectory, FileManager.SearchPathDomainMask.UserDomainMask, true)[0] as String
+                let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0] as String
                 let imageDirPath = docsPath.stringByAppendingPathComponent("SwiftDataImages")
                 let fullPath = imageDirPath.stringByAppendingPathComponent(path)
                 if FileManager.defaultManager().fileExistsAtPath(fullPath) {
@@ -1296,7 +1296,7 @@ extension SwiftData.SQLiteDB {
         
         if let obj: AnyObject = obj {
             if obj is String {
-                return "'\(escapeStringValue(str: obj as String))'"
+                return "'\(escapeStringValue(obj as String))'"
             }
             if obj is Double || obj is Int {
                 return "\(obj: obj)"
@@ -1340,7 +1340,7 @@ extension SwiftData.SQLiteDB {
     
     //return escaped String identifier
     func escapeIdentifier(obj: String) -> String {
-        return "\"\(escapeStringIdentifier(str: obj))\""
+        return "\"\(escapeStringIdentifier(obj: obj))\""
     }
     
     

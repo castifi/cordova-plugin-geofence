@@ -268,10 +268,8 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         
         //store
         store.addOrUpdate(geoNotification)
-        if (region != nil) {
-            log("Stoping monitoring region \(region.identifier)")
-            locationManager.stopMonitoring(for: region!)
-        }
+        log("Stoping monitoring region \(region.identifier)")
+        locationManager.stopMonitoring(for: region as CLRegion)
     }
     
     func checkRequirements() -> (Bool, [String], [String]) {
@@ -339,7 +337,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         let region = getMonitoredRegion(id)
         if (region != nil) {
             log("Stoping monitoring region \(id)")
-            locationManager.stopMonitoring(for: region!)
+            locationManager.stopMonitoring(for: region as CLRegion)
         }
     }
     
