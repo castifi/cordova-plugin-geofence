@@ -65,11 +65,11 @@ func log(_ messages: [String]) {
         let result: CDVPluginResult
         
         if ok {
-            result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: warnings.joined("\n"))
+            result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: warnings.joined(separator: "\n"))
         } else {
             result = CDVPluginResult(
                 status: CDVCommandStatus_ILLEGAL_ACCESS_EXCEPTION,
-                messageAs: (errors + warnings).joined("\n")
+                messageAs: (errors + warnings).joined(separator: "\n")
             )
         }
         
@@ -336,7 +336,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         let region = getMonitoredRegion(id)
         if (region != nil) {
             log("Stoping monitoring region \(id)")
-            locationManager.stopMonitoring(for: region!)
+            locationManager.stopMonitoring(for: region as CLRegion)
         }
     }
     
@@ -345,7 +345,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         for object in locationManager.monitoredRegions {
             let region = object
             log("Stoping monitoring region \(region.identifier)")
-            locationManager.stopMonitoring(for: region!)
+            locationManager.stopMonitoring(for: region as CLRegion)
         }
     }
     
@@ -386,8 +386,8 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         log("State for region " + region.identifier)
     }
     
-    func locationManager(_ manager: CLLocationManager, monitoringDidFailForRegion region: CLRegion?, withError error: Error) {
-        log("Monitoring region " + region!.identifier + " failed " + error.description)
+    func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
+        log("Monitoring region " + region!.identifier + " failed " + error)
     }
     
     func handleTransition(_ region: CLRegion!, transitionType: Int) {
@@ -398,7 +398,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
                 notifyAbout(geoNotification)
             }
             
-            NotificationCenter.default.postNotificationName(name: NSNotification.Name(rawValue: "handleTransition"), object: geoNotification.rawString(String.Encoding.utf8, options: []))
+            NotificationCenter.default.postNotificationName(NSNotification.Name(rawValue: "handleTransition"), object: geoNotification.rawString(String.Encoding.utf8, options: []))
         }
     }
     
@@ -485,7 +485,7 @@ class GeoNotificationStore {
             return nil
         } else {
             if (resultSet.count > 0) {
-                let jsonString = resultSet[0]["Data"]! as String!
+                let jsonString = resultSet[0]["Data"].asString();
                 return JSON(data: jsonString.data(using: String.Encoding.utf8)!)
             }
             else {
