@@ -463,7 +463,7 @@ public struct SwiftData {
      
      :returns:          An Int with the error code, or nil if there was no error
      */
-    public static func createIndex(#name: String, onColumns: [String], inTable: String, isUnique: Bool = false) -> Int? {
+    public static func createIndex(name: String, onColumns: [String], inTable: String, isUnique: Bool = false) -> Int? {
         
         var error: Int? = nil
         let task: ()->Void = {
@@ -706,7 +706,7 @@ public struct SwiftData {
     
     // MARK: - SQLiteDB Class
     
-    private class SQLiteDB {
+    public class SQLiteDB {
         
         class var sharedInstance: SQLiteDB {
             struct Singleton {
@@ -1217,7 +1217,7 @@ public struct SwiftData {
     
     // MARK: - Error Handling
     
-    private struct SDError {
+    public struct SDError {
         
     }
     

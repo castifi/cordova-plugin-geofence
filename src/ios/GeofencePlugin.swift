@@ -65,26 +65,26 @@ func log(_ messages: [String]) {
         let result: CDVPluginResult
         
         if ok {
-            result = CDVPluginResult(status: CDVCommandStatus_OK, messageAsString: warnings.joinWithSeparator("\n"))
+            result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: warnings.joined("\n"))
         } else {
             result = CDVPluginResult(
                 status: CDVCommandStatus_ILLEGAL_ACCESS_EXCEPTION,
-                messageAsString: (errors + warnings).joinWithSeparator("\n")
+                messageAs: (errors + warnings).joined("\n")
             )
         }
         
-        commandDelegate!.sendPluginResult(result, callbackId: command.callbackId)
+        commandDelegate!.send(result, callbackId: command.callbackId)
     }
     
     func deviceReady(_ command: CDVInvokedUrlCommand) {
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
-        commandDelegate!.sendPluginResult(pluginResult, callbackId: command.callbackId)
+        commandDelegate!.send(pluginResult, callbackId: command.callbackId)
     }
     
     func ping(_ command: CDVInvokedUrlCommand) {
         log("Ping")
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
-        commandDelegate!.sendPluginResult(pluginResult, callbackId: command.callbackId)
+        commandDelegate!.send(pluginResult, callbackId: command.callbackId)
     }
     
     func promptForNotificationPermission() {
@@ -103,7 +103,7 @@ func log(_ messages: [String]) {
             }
             DispatchQueue.main.async {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
-                self.commandDelegate!.sendPluginResult(pluginResult, callbackId: command.callbackId)
+                self.commandDelegate!.send(pluginResult, callbackId: command.callbackId)
             }
         }
     }
@@ -113,8 +113,8 @@ func log(_ messages: [String]) {
             let watched = self.geoNotificationManager.getWatchedGeoNotifications()!
             let watchedJsonString = watched.description
             DispatchQueue.main.async {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAsString: watchedJsonString)
-                self.commandDelegate!.sendPluginResult(pluginResult, callbackId: command.callbackId)
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: watchedJsonString)
+                self.commandDelegate!.send(pluginResult, callbackId: command.callbackId)
             }
         }
     }
@@ -126,7 +126,7 @@ func log(_ messages: [String]) {
             }
             DispatchQueue.main.async {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
-                self.commandDelegate!.sendPluginResult(pluginResult, callbackId: command.callbackId)
+                self.commandDelegate!.send(pluginResult, callbackId: command.callbackId)
             }
         }
     }
@@ -136,7 +136,7 @@ func log(_ messages: [String]) {
             self.geoNotificationManager.removeAllGeoNotifications()
             DispatchQueue.main.async {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
-                self.commandDelegate!.sendPluginResult(pluginResult, callbackId: command.callbackId)
+                self.commandDelegate!.send(pluginResult, callbackId: command.callbackId)
             }
         }
     }
@@ -169,7 +169,7 @@ func log(_ messages: [String]) {
     func evaluateJs (_ script: String) {
         if let webView = webView {
             if let uiWebView = webView as? UIWebView {
-                uiWebView.stringByEvaluatingJavaScriptFromString(script)
+                uiWebView.stringByEvaluatingJavaScript(from: script)
             } else if let wkWebView = webView as? WKWebView {
                 wkWebView.evaluateJavaScript(script, completionHandler: nil)
             }
@@ -268,14 +268,14 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         
         //store
         store.addOrUpdate(geoNotification)
-        locationManager.startMonitoringForRegion(region)
+        locationManager.startMonitoring(for: region)
     }
     
     func checkRequirements() -> (Bool, [String], [String]) {
         var errors = [String]()
         var warnings = [String]()
         
-        if (!CLLocationManager.isMonitoringAvailableForClass(CLRegion)) {
+        if (!CLLocationManager.isMonitoringAvailable(for: CLRegion)) {
             errors.append("Geofencing not available")
         }
         
@@ -285,7 +285,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         
         let authStatus = CLLocationManager.authorizationStatus()
         
-        if (authStatus != CLAuthorizationStatus.AuthorizedAlways) {
+        if (authStatus != CLAuthorizationStatus.authorizedAlways) {
             errors.append("Warning: Location always permissions not granted")
         }
         
@@ -336,7 +336,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         let region = getMonitoredRegion(id)
         if (region != nil) {
             log("Stoping monitoring region \(id)")
-            locationManager.stopMonitoringForRegion(region!)
+            locationManager.stopMonitoring(for: region!)
         }
     }
     
@@ -345,7 +345,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         for object in locationManager.monitoredRegions {
             let region = object
             log("Stoping monitoring region \(region.identifier)")
-            locationManager.stopMonitoringForRegion(region)
+            locationManager.stopMonitoring(for: region!)
         }
     }
     
@@ -371,7 +371,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         handleTransition(region, transitionType: 2)
     }
     
-    func locationManager(_ manager: CLLocationManager, didStartMonitoringForRegion region: CLRegion) {
+    func locationManager(_ manager: CLLocationManager, didStartMonitoringFor region: CLRegion) {
         if region is CLCircularRegion {
             let lat = (region as! CLCircularRegion).center.latitude
             let lng = (region as! CLCircularRegion).center.longitude
@@ -381,7 +381,8 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         }
     }
     
-    func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, forRegion region: CLRegion) {
+    @nonobjc
+    func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
         log("State for region " + region.identifier)
     }
     
@@ -393,11 +394,11 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         if var geoNotification = store.findById(region.identifier) {
             geoNotification["transitionType"].int = transitionType
             
-            if geoNotification["notification"].isExists() {
+            if geoNotification["notification"].exists() {
                 notifyAbout(geoNotification)
             }
             
-            NotificationCenter.defaultCenter().postNotificationName("handleTransition", object: geoNotification.rawString(String.Encoding.utf8, options: []))
+            NotificationCenter.default.postNotificationName("handleTransition", object: geoNotification.rawString(String.Encoding.utf8, options: []))
         }
     }
     
@@ -436,7 +437,7 @@ class GeoNotificationStore {
         }
         
         if (tables.filter { $0 == "GeoNotifications" }.count == 0) {
-            if let err = SD.executeChange("CREATE TABLE GeoNotifications (ID TEXT PRIMARY KEY, Data TEXT)") {
+            if let err = SD.executeChange(sqlStr: "CREATE TABLE GeoNotifications (ID TEXT PRIMARY KEY, Data TEXT)") {
                 //there was an error during this function, handle it here
                 log("Error while creating GeoNotifications table: \(err)")
             } else {
@@ -457,7 +458,7 @@ class GeoNotificationStore {
     
     func add(_ geoNotification: JSON) {
         let id = geoNotification["id"].stringValue
-        let err = SD.executeChange("INSERT INTO GeoNotifications (Id, Data) VALUES(?, ?)",
+        let err = SD.executeChange(sqlStr: "INSERT INTO GeoNotifications (Id, Data) VALUES(?, ?)",
                                    withArgs: [id, geoNotification.description])
         
         if err != nil {
@@ -467,7 +468,7 @@ class GeoNotificationStore {
     
     func update(_ geoNotification: JSON) {
         let id = geoNotification["id"].stringValue
-        let err = SD.executeChange("UPDATE GeoNotifications SET Data = ? WHERE Id = ?",
+        let err = SD.executeChange(sqlStr: "UPDATE GeoNotifications SET Data = ? WHERE Id = ?",
                                    withArgs: [geoNotification.description, id])
         
         if err != nil {
@@ -512,7 +513,7 @@ class GeoNotificationStore {
     }
     
     func remove(_ id: String) {
-        let err = SD.executeChange("DELETE FROM GeoNotifications WHERE Id = ?", withArgs: [id])
+        let err = SD.executeChange(sqlStr: "DELETE FROM GeoNotifications WHERE Id = ?", withArgs: [id])
         
         if err != nil {
             log("Error while removing \(id) GeoNotification: \(err)")
@@ -520,7 +521,7 @@ class GeoNotificationStore {
     }
     
     func clear() {
-        let err = SD.executeChange("DELETE FROM GeoNotifications")
+        let err = SD.executeChange(sqlStr: "DELETE FROM GeoNotifications")
         
         if err != nil {
             log("Error while deleting all from GeoNotifications: \(err)")
