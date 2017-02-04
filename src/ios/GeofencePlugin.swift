@@ -268,7 +268,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         
         //store
         store.addOrUpdate(geoNotification)
-        locationManager.startMonitoring(for: region)
+        locationManager.startMonitoring(for: region!)
     }
     
     func checkRequirements() -> (Bool, [String], [String]) {
@@ -336,7 +336,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         let region = getMonitoredRegion(id)
         if (region != nil) {
             log("Stoping monitoring region \(id)")
-            locationManager.stopMonitoring(for: region)
+            locationManager.stopMonitoring(for: region!)
         }
     }
     
@@ -345,7 +345,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         for object in locationManager.monitoredRegions {
             let region = object
             log("Stoping monitoring region \(region.identifier)")
-            locationManager.stopMonitoring(for: region)
+            locationManager.stopMonitoring(for: region!)
         }
     }
     
@@ -486,7 +486,7 @@ class GeoNotificationStore {
         } else {
             if (resultSet.count > 0) {
                 let jsonString = resultSet[0]["Data"]!.asString();
-                return JSON(data: jsonString.data(using: String.Encoding.utf8)!)
+                return JSON(data: jsonString!.data(using: String.Encoding.utf8)!)
             }
             else {
                 return nil
@@ -513,7 +513,7 @@ class GeoNotificationStore {
     }
     
     func remove(_ id: String) {
-        let err = SD.executeChange(sqlStr: "DELETE FROM GeoNotifications WHERE Id = ?", withArgs: [id])
+        let err = SD.executeChange(sqlStr: "DELETE FROM GeoNotifications WHERE Id = ?", withArgs: [id as AnyObject])
         
         if err != nil {
             log("Error while removing \(id) GeoNotification: \(err)")
