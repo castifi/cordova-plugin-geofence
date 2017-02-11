@@ -324,7 +324,6 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
     func getMonitoredRegion(_ id: String) -> CLRegion? {
         for object in locationManager.monitoredRegions {
             let region = object
-            
             if (region.identifier == id) {
                 return region
             }
@@ -344,11 +343,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
     func removeAllGeoNotifications() {
         store.clear()
         for object in locationManager.monitoredRegions {
-            let region = object
-            if (region != nil) {
-                log("Stoping monitoring region \(id)")
-                locationManager.stopMonitoring(for: region! as CLRegion)
-            }
+            locationManager.stopMonitoring(for: object as CLRegion)
         }
     }
     
