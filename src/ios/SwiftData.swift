@@ -672,19 +672,35 @@ public struct SwiftData {
         let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0] as String
         let imageDirPath = docsPath.stringByAppendingPathComponent(path: "SwiftDataImages")
         if FileManager.default.fileExists(atPath: imageDirPath) {
-            if FileManager.default.createDirectory(at: imageDirPath, withIntermediateDirectories: false, attributes: nil, error: nil) {
+            do {
+                try FileManager.default.createDirectory(at: URL(string: imageDirPath)!, withIntermediateDirectories: false, attributes: nil)
+            } catch {
                 print("Error creating SwiftData image folder")
                 return nil
             }
+            
+//            if FileManager.default.createDirectory(at: URL(string: imageDirPath)!, withIntermediateDirectories: false, attributes: nil) {
+//                print("Error creating SwiftData image folder")
+//                return nil
+//            }
         }
         let imageID = NSUUID().uuidString
         let imagePath = imageDirPath.stringByAppendingPathComponent(path: imageID)
         let imageAsData = UIImagePNGRepresentation(image)
-        if !imageAsData!.write(to: imagePath, options: true) {
+        
+        do {
+            try imageAsData?.write(to: URL(string: imagePath)!)
+            return imageID
+        } catch {
             print("Error saving image")
             return nil
         }
-        return imageID
+        
+//        if !imageAsData!.write(to: URL(string: imagePath)!) {
+//            print("Error saving image")
+//            return nil
+//        }
+        
         
     }
     
@@ -700,8 +716,12 @@ public struct SwiftData {
         let docsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0] as String
         let imageDirPath = docsPath.stringByAppendingPathComponent(path: "SwiftDataImages")
         let fullPath = imageDirPath.stringByAppendingPathComponent(path: id)
-        return FileManager.default.removeItem(atPath: fullPath)
-        
+        do {
+            try FileManager.default.removeItem(atPath: fullPath);
+            return true;
+        } catch {
+            return false;
+        }
     }
     
     
@@ -929,7 +949,7 @@ public struct SwiftData {
         
         //number of rows changed by last update
         func numberOfRowsModified() -> Int {
-            return Int(sqlite3_changes(sqliteDB)) as AnyObject
+            return Int(sqlite3_changes(sqliteDB))
         }
         
         //return value of column
@@ -942,7 +962,8 @@ public struct SwiftData {
                 }
                 return Int(sqlite3_column_int(statement, index)) as AnyObject?
             case "CHARACTER(20)", "VARCHAR(255)", "VARYING CHARACTER(255)", "NCHAR(55)", "NATIVE CHARACTER", "NVARCHAR(100)", "TEXT", "CLOB":
-                let text = UnsafePointer<Int8>(sqlite3_column_text(statement, index))
+                let text = sqlite3_column_text(statement, index)
+//                let text = UnsafePointer<Int8>(sqlite3_column_text(statement, index))
                 return String(cString: text!) as AnyObject
             case "BLOB", "NONE":
                 let blob = sqlite3_column_blob(statement, index)
@@ -964,12 +985,16 @@ public struct SwiftData {
             case "DATE", "DATETIME":
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-                let text = UnsafePointer<Int8>(sqlite3_column_text(statement, index))
-                if let string = String(cString: text!) {
-                    return dateFormatter.dateFromString(string)
-                }
-                print("SwiftData Warning -> The text date at column: \(index) could not be cast as a String, returning nil")
-                return nil
+                let text = sqlite3_column_text(statement, index)
+                let string: String = String(cString: text!)
+                return dateFormatter.date(from: string) as AnyObject
+                
+//                let text = UnsafePointer<Int8>(sqlite3_column_text(statement, index))
+//                if let string = String?(cString: text!) {
+//                    return dateFormatter.dateFromString(string)
+//                }
+//                print("SwiftData Warning -> The text date at column: \(index) could not be cast as a String, returning nil")
+//                return nil
             default:
                 print("SwiftData Warning -> Column: \(index) is of an unrecognized type, returning nil")
                 return nil
@@ -1049,34 +1074,38 @@ public struct SwiftData {
                 if status == SQLITE_ROW {
                     columnCount = sqlite3_column_count(pStmt)
                     var row = SDRow()
-                    for var i in ..<columnCount {
-                        let columnName = String(cString: sqlite3_column_name(pStmt, i))!
-                        if let columnType = String(cString: sqlite3_column_decltype(pStmt, i))?.uppercaseString {
-                            if let columnValue: AnyObject = getColumnValue(pStmt, index: i, type: columnType) {
-                                row[columnName] = SDColumn(obj: columnValue)
-                            }
-                        } else {
-                            var columnType = ""
-                            switch sqlite3_column_type(pStmt, i) {
-                            case SQLITE_INTEGER:
-                                columnType = "INTEGER"
-                            case SQLITE_FLOAT:
-                                columnType = "FLOAT"
-                            case SQLITE_TEXT:
-                                columnType = "TEXT"
-                            case SQLITE3_TEXT:
-                                columnType = "TEXT"
-                            case SQLITE_BLOB:
-                                columnType = "BLOB"
-                            case SQLITE_NULL:
-                                columnType = "NULL"
-                            default:
-                                columnType = "NULL"
-                            }
-                            if let columnValue: AnyObject = getColumnValue(pStmt, index: i, type: columnType) {
-                                row[columnName] = SDColumn(obj: columnValue)
-                            }
+                    for var i in 0..<columnCount {
+                        let columnName = String(cString: sqlite3_column_name(pStmt, i))
+                        let columnType = String(cString: sqlite3_column_decltype(pStmt, i)).uppercased()
+                        if let columnValue: AnyObject? = getColumnValue(statement: pStmt!, index: i, type: columnType) {
+                            row[columnName] = SDColumn(obj: columnValue!)
                         }
+//                        if let columnType: String = String(cString: sqlite3_column_decltype(pStmt, i)).uppercased() {
+//                            if let columnValue: AnyObject? = getColumnValue(statement: pStmt!, index: i, type: columnType) {
+//                                row[columnName] = SDColumn(obj: columnValue!)
+//                            }
+//                        } else {
+//                            var columnType = ""
+//                            switch sqlite3_column_type(pStmt, i) {
+//                            case SQLITE_INTEGER:
+//                                columnType = "INTEGER"
+//                            case SQLITE_FLOAT:
+//                                columnType = "FLOAT"
+//                            case SQLITE_TEXT:
+//                                columnType = "TEXT"
+//                            case SQLITE3_TEXT:
+//                                columnType = "TEXT"
+//                            case SQLITE_BLOB:
+//                                columnType = "BLOB"
+//                            case SQLITE_NULL:
+//                                columnType = "NULL"
+//                            default:
+//                                columnType = "NULL"
+//                            }
+//                            if let columnValue: AnyObject = getColumnValue(statement: pStmt!, index: i, type: columnType) {
+//                                row[columnName] = SDColumn(obj: columnValue)
+//                            }
+//                        }
                     }
                     resultSet.append(row)
                 } else if status == SQLITE_DONE {
@@ -1233,7 +1262,7 @@ extension SwiftData {
         if SQLiteDB.sharedInstance.inTransaction || SQLiteDB.sharedInstance.savepointsOpen > 0 || SQLiteDB.sharedInstance.openWithFlags {
             task()
         } else {
-            DispatchQueue.sync(flags: _, execute: SQLiteDB.sharedInstance.queue) {
+            SQLiteDB.sharedInstance.queue.sync {
                 task()
             }
         }
@@ -1251,7 +1280,7 @@ extension SwiftData.SQLiteDB {
         var newSql = ""
         var bindIndex = 0
         var i = false
-        for char in sql {
+        for char in sql.characters {
             if char == "?" {
                 if bindIndex > objects.count - 1 {
                     print("SwiftData Error -> During: Object Binding")
@@ -1261,15 +1290,16 @@ extension SwiftData.SQLiteDB {
                 var obj = ""
                 if i {
                     if let str = objects[bindIndex] as? String {
-                        obj = escapeIdentifier(str)
+                        obj = escapeIdentifier(obj: str)
                     } else {
                         print("SwiftData Error -> During: Object Binding")
                         print("                -> Code: 203 - Object to bind as identifier must be a String at array location: \(bindIndex)")
                         return ("", 203)
                     }
-                    newSql = newSql.substringToIndex(newSql.endIndex.predecessor())
+//                    newSql = newSql.substring(to: newSql.endIndex.predecessor())
+                    newSql = newSql.substring(to: newSql.index(before: newSql.endIndex))
                 } else {
-                    obj = escapeValue(objects[bindIndex])
+                    obj = escapeValue(obj: objects[bindIndex])
                 }
                 newSql += obj
                 bindIndex += 1
